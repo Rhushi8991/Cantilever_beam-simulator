@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cantilever Beam Simulator</title>
+    <title>Beam Deflection Simulator Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        #beamCanvas {
-            width: 100%;
-            height: auto;
-            aspect-ratio: 2 / 1;
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        /* Simple transition for showing/hiding inputs */
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .simulator-page {
+            display: none; /* Hide simulator pages by default */
+        }
         .input-group {
             transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out;
             max-height: 0;
@@ -23,372 +27,361 @@
             overflow: hidden;
         }
         .input-group.active {
-            max-height: 500px; /* Large enough to fit content */
+            max-height: 500px;
             opacity: 1;
         }
     </style>
 </head>
-<body class="bg-slate-100 text-gray-800 flex items-center justify-center min-h-screen p-4">
-    <div class="w-full max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-10">
-        
-        <div class="text-center mb-10">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-500">
-                Advanced Cantilever Beam Simulator
-            </h1>
-            <p class="text-gray-600 mt-3 text-lg">An interactive tool for detailed beam deflection analysis.</p>
-        </div>
+<body class="bg-slate-100 text-gray-800">
 
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            
-            <!-- Input Controls Column -->
-            <div class="lg:col-span-2 bg-slate-50 p-6 rounded-xl border border-slate-200 h-fit">
-                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Parameters</h2>
+    <!-- Hub Page -->
+    <div id="hub-page">
+        <div class="container mx-auto px-4 py-12">
+            <div class="text-center mb-16">
+                <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-500">
+                    Beam Deflection Simulators
+                </h1>
+                <p class="text-gray-600 mt-4 text-xl">Choose a beam configuration to begin your analysis.</p>
+            </div>
+
+            <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-10">
+                <a href="#" onclick="showSimulator('cantilever')" class="card block bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 bg-slate-200/60 border-b border-slate-200">
+                        <svg viewBox="0 0 200 100" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="10" width="20" height="80" fill="#4B5563"/><path d="M 20,50 C 80,50 140,80 190,95" stroke="#a855f7" stroke-width="5" fill="none"/><line x1="20" y1="50" x2="190" y2="50" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="4 4"/></svg>
+                    </div>
+                    <div class="p-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Cantilever Beam</h2>
+                        <p class="text-gray-600 mb-4">A beam fixed at one end and free at the other. Analyze its deflection under a point load.</p>
+                        <span class="font-semibold text-indigo-600">Open Simulator &rarr;</span>
+                    </div>
+                </a>
                 
-                <!-- Beam & Material Properties -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <label for="beamLength" class="block text-sm font-medium text-gray-700 mb-1">Length (L) <span class="text-gray-400">mm</span></label>
-                        <input type="number" id="beamLength" value="1000" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <a href="#" onclick="showSimulator('simply-supported')" class="card block bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 bg-slate-200/60 border-b border-slate-200">
+                        <svg viewBox="0 0 200 100" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg"><path d="M 10,50 C 60,85 140,85 190,50" stroke="#4f46e5" stroke-width="5" fill="none"/><line x1="10" y1="50" x2="190" y2="50" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="4 4"/><path d="M 10 55 L 0 70 L 20 70 Z" fill="#4B5563"/><circle cx="190" cy="65" r="10" stroke="#4B5563" stroke-width="2" fill="white"/></svg>
                     </div>
-                    <div>
-                        <label for="youngsModulus" class="block text-sm font-medium text-gray-700 mb-1">E <span class="text-gray-400">MPa</span></label>
-                        <input type="number" id="youngsModulus" value="200000" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="p-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Simply Supported Beam</h2>
+                        <p class="text-gray-600 mb-4">A beam supported at both ends, free to rotate. Analyze its deflection under a point load.</p>
+                        <span class="font-semibold text-purple-600">Open Simulator &rarr;</span>
                     </div>
-                </div>
-
-                <!-- Load Properties -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                    <div>
-                        <label for="pointLoad" class="block text-sm font-medium text-gray-700 mb-1">Load (P) <span class="text-gray-400">N</span></label>
-                        <input type="number" id="pointLoad" value="500" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                     <div>
-                        <label for="loadPosition" class="block text-sm font-medium text-gray-700 mb-1">Load Pos. (a) <span class="text-gray-400">mm</span></label>
-                        <input type="number" id="loadPosition" value="1000" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                </div>
-
-                <!-- Cross-Section Properties -->
-                <div class="border-t pt-6">
-                     <label for="crossSection" class="block text-sm font-bold text-gray-800 mb-2">Cross-Section Shape</label>
-                     <select id="crossSection" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                         <option value="circle" selected>Circle</option>
-                         <option value="rectangle">Rectangle</option>
-                         <option value="triangle">Triangle</option>
-                     </select>
-                </div>
-                
-                <div class="mt-4 space-y-4">
-                    <!-- Circle Inputs -->
-                    <div id="circleInputs" class="input-group p-4 bg-white rounded-lg border">
-                         <div class="flex justify-center my-2">
-                            <svg width="80" height="60" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="50" cy="37.5" r="30" stroke="#4F46E5" stroke-width="2"/>
-                                <line x1="50" y1="37.5" x2="80" y2="37.5" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="2 2"/>
-                                <text x="65" y="32.5" font-family="Inter" font-size="12" fill="#111827">r</text>
-                            </svg>
-                         </div>
-                         <label for="radius" class="block text-sm font-medium text-gray-700 mb-1">Radius (r) <span class="text-gray-400">mm</span></label>
-                         <input type="number" id="radius" value="20" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                    </div>
-                    <!-- Rectangle Inputs -->
-                    <div id="rectangleInputs" class="input-group p-4 bg-white rounded-lg border">
-                        <div class="flex justify-center my-2">
-                             <svg width="80" height="60" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="20" y="15" width="60" height="45" stroke="#4F46E5" stroke-width="2"/>
-                                <text x="48" y="72" font-family="Inter" font-size="12" fill="#111827">b</text>
-                                <text x="5" y="40" font-family="Inter" font-size="12" fill="#111827">h</text>
-                            </svg>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="rectWidth" class="block text-sm font-medium text-gray-700 mb-1">Width (b) <span class="text-gray-400">mm</span></label>
-                                <input type="number" id="rectWidth" value="20" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="rectHeight" class="block text-sm font-medium text-gray-700 mb-1">Height (h) <span class="text-gray-400">mm</span></label>
-                                <input type="number" id="rectHeight" value="40" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Triangle Inputs -->
-                    <div id="triangleInputs" class="input-group p-4 bg-white rounded-lg border">
-                        <div class="flex justify-center my-2">
-                            <svg width="100" height="70" viewBox="0 0 120 85" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M60 10 L110 75 L10 75 Z" stroke="#4F46E5" stroke-width="2" fill-opacity="0.1" fill="#C7D2FE"/>
-                                <text x="5" y="45" font-family="Inter" font-size="12" fill="#111827">c</text>
-                                <text x="100" y="45" font-family="Inter" font-size="12" fill="#111827">b</text>
-                                <text x="55" y="85" font-family="Inter" font-size="12" fill="#111827">a</text>
-                            </svg>
-                        </div>
-                        <p class="text-xs text-center text-gray-500 mb-3">Side 'a' is the base used for the Moment of Inertia calculation.</p>
-                        <div class="grid grid-cols-3 gap-2">
-                             <div>
-                                <label for="sideA" class="block text-sm font-medium text-gray-700 mb-1">Base (a)</label>
-                                <input type="number" id="sideA" value="50" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="sideB" class="block text-sm font-medium text-gray-700 mb-1">Side b</label>
-                                <input type="number" id="sideB" value="50" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="sideC" class="block text-sm font-medium text-gray-700 mb-1">Side c</label>
-                                <input type="number" id="sideC" value="50" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                            </div>
-                        </div>
-                        <p id="triangleError" class="text-xs text-red-500 mt-2 hidden">These side lengths do not form a valid triangle.</p>
-                    </div>
-                </div>
-
-                 <button id="solveButton" class="w-full mt-8 bg-gradient-to-r from-indigo-600 to-purple-500 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-300 transform hover:scale-105 shadow-lg">
-                    Calculate Deflection
-                </button>
+                </a>
             </div>
 
-            <!-- Canvas and Results Column -->
-            <div class="lg:col-span-3">
-                <div class="bg-slate-200/60 p-4 rounded-xl border border-slate-200 flex items-center justify-center">
-                    <canvas id="beamCanvas"></canvas>
-                </div>
-                 <div class="grid sm:grid-cols-2 gap-4 mt-4 text-center">
-                     <div class="bg-indigo-100 p-4 rounded-lg border border-indigo-200">
-                         <h3 class="font-semibold text-indigo-800 text-sm tracking-wider uppercase">Moment of Inertia (I)</h3>
-                         <p id="inertiaResult" class="text-2xl font-bold text-indigo-600 mt-1">0.00 <span class="text-base font-normal">mm⁴</span></p>
-                     </div>
-                     <div class="bg-purple-100 p-4 rounded-lg border border-purple-200">
-                         <h3 class="font-semibold text-purple-800 text-sm tracking-wider uppercase">Max Deflection (δ)</h3>
-                         <p id="maxDeflection" class="text-2xl font-bold text-purple-600 mt-1">0.00 <span class="text-base font-normal">mm</span></p>
-                     </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Formulas and Theory Section -->
-        <div class="mt-12 pt-8 border-t border-slate-200">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Formulas & Theory Behind the Simulator</h2>
-            <div class="grid md:grid-cols-2 gap-x-8 gap-y-6 text-gray-700">
-                <div>
-                    <h3 class="text-xl font-semibold text-indigo-700 mb-3">Beam Deflection</h3>
-                    <p class="mb-4 text-sm">The deflection <span class="font-mono">y</span> (vertical displacement) of a cantilever beam at any point <span class="font-mono">x</span> from the fixed end, under a point load <span class="font-mono">P</span> applied at a distance <span class="font-mono">a</span>, is calculated as follows:</p>
-                    <div class="bg-slate-100 p-4 rounded-lg text-center font-mono text-sm my-2 border border-slate-200">
-                        <p class="font-bold text-slate-600">For x ≤ a:</p>
-                        <p class="mt-1 text-indigo-800">y(x) = (P * x²) / (6 * EI) * (3a - x)</p>
+            <div class="max-w-6xl mx-auto mt-20 pt-10 border-t border-slate-300">
+                <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">Formulas & Theory</h2>
+                <div class="bg-white p-8 rounded-xl shadow-md">
+                    <div class="grid md:grid-cols-3 gap-x-8 gap-y-8 text-gray-700">
+                        <div>
+                            <h3 class="text-xl font-semibold text-indigo-700 mb-4">Cantilever Deflection</h3>
+                            <p class="mb-4 text-xs">For a point load <span class="font-mono">P</span> at <span class="font-mono">a</span> from the fixed end:</p>
+                            <div class="bg-slate-100 p-3 rounded-lg font-mono text-xs my-2 border">
+                                <p class="font-bold text-slate-600">x ≤ a:</p>
+                                <p class="mt-1">y(x) = (Px²)/(6EI)(3a-x)</p>
+                            </div>
+                            <div class="bg-slate-100 p-3 rounded-lg font-mono text-xs my-2 border">
+                                <p class="font-bold text-slate-600">x > a:</p>
+                                <p class="mt-1">y(x) = (Pa²)/(6EI)(3x-a)</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-purple-700 mb-4">Simply Supported Deflection</h3>
+                            <p class="mb-4 text-xs">For a point load <span class="font-mono">P</span> at <span class="font-mono">a</span>, let <span class="font-mono">b=L-a</span>:</p>
+                            <div class="bg-slate-100 p-3 rounded-lg font-mono text-xs my-2 border">
+                                <p class="font-bold text-slate-600">x ≤ a:</p>
+                                <p class="mt-1">y(x)=(Pbx)/(6LEI)(L²-b²-x²)</p>
+                            </div>
+                            <div class="bg-slate-100 p-3 rounded-lg font-mono text-xs my-2 border">
+                                <p class="font-bold text-slate-600">x > a:</p>
+                                <p class="mt-1">y(x)=(Pa(L-x))/(6LEI)(2Lx-x²-a²)</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-700 mb-4">Moment of Inertia (I)</h3>
+                            <p class="mb-4 text-xs">Measures a cross-section's resistance to bending.</p>
+                            <div class="space-y-2 text-xs">
+                                <div class="bg-slate-100 p-2 rounded-lg border font-mono flex justify-between items-center"><strong>Circle:</strong><span>I=(πr⁴)/4</span></div>
+                                <div class="bg-slate-100 p-2 rounded-lg border font-mono flex justify-between items-center"><strong>Rectangle:</strong><span>I=(bh³)/12</span></div>
+                                <div class="bg-slate-100 p-2 rounded-lg border font-mono flex justify-between items-center"><strong>Triangle:</strong><span>I=(bh³)/36</span></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-slate-100 p-4 rounded-lg text-center font-mono text-sm my-2 border border-slate-200">
-                         <p class="font-bold text-slate-600">For x > a:</p>
-                        <p class="mt-1 text-indigo-800">y(x) = (P * a²) / (6 * EI) * (3x - a)</p>
-                    </div>
-                     <p class="mt-4 text-sm">Where <span class="font-mono">E</span> is the Young's Modulus and <span class="font-mono">I</span> is the Moment of Inertia.</p>
-                </div>
-                <div>
-                     <h3 class="text-xl font-semibold text-purple-700 mb-3">Moment of Inertia (I)</h3>
-                     <p class="mb-4 text-sm">The Moment of Inertia (<span class="font-mono">I</span>) is a property of a cross-section that measures its efficiency in resisting bending. It is also known as the second moment of area.</p>
-                     <div class="space-y-3 text-sm">
-                        <div class="bg-slate-100 p-3 rounded-lg border border-slate-200 font-mono flex justify-between items-center"><strong>Circle:</strong> <span class="text-purple-800">I = (π * r⁴) / 4</span></div>
-                        <div class="bg-slate-100 p-3 rounded-lg border border-slate-200 font-mono flex justify-between items-center"><strong>Rectangle:</strong> <span class="text-purple-800">I = (b * h³) / 12</span></div>
-                        <div class="bg-slate-100 p-3 rounded-lg border border-slate-200 font-mono flex justify-between items-center"><strong>Triangle:</strong> <span class="text-purple-800">I = (b * h³) / 36</span></div>
-                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 
+    <!-- Cantilever Simulator Page -->
+    <div id="cantilever-page" class="simulator-page">
+        <div class="w-full max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-10 min-h-screen">
+             <div class="text-center mb-10">
+                <a href="#" onclick="showHub()" class="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">&larr; Back to Home</a>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-500">Cantilever Beam Simulator</h1>
+                <p class="text-gray-600 mt-3 text-lg">An interactive tool for detailed beam deflection analysis.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-2 bg-slate-50 p-6 rounded-xl border border-slate-200 h-fit">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Parameters</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label for="c-beamLength" class="block text-sm font-medium text-gray-700 mb-1">Length (L) <span class="text-gray-400">mm</span></label>
+                            <input type="number" id="c-beamLength" value="1000" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label for="c-youngsModulus" class="block text-sm font-medium text-gray-700 mb-1">E <span class="text-gray-400">MPa</span></label>
+                            <input type="number" id="c-youngsModulus" value="200000" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                        <div>
+                            <label for="c-pointLoad" class="block text-sm font-medium text-gray-700 mb-1">Load (P) <span class="text-gray-400">N</span></label>
+                            <input type="number" id="c-pointLoad" value="500" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label for="c-loadPosition" class="block text-sm font-medium text-gray-700 mb-1">Load Pos. (a) <span class="text-gray-400">mm</span></label>
+                            <input type="number" id="c-loadPosition" value="1000" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    <div class="border-t pt-6">
+                        <label for="c-crossSection" class="block text-sm font-bold text-gray-800 mb-2">Cross-Section Shape</label>
+                        <select id="c-crossSection" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="circle" selected>Circle</option>
+                            <option value="rectangle">Rectangle</option>
+                            <option value="triangle">Triangle</option>
+                        </select>
+                    </div>
+                    <div class="mt-4 space-y-4">
+                        <div id="c-circleInputs" class="input-group p-4 bg-white rounded-lg border"><div class="flex justify-center my-2"><svg width="80" height="60" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="37.5" r="30" stroke="#4F46E5" stroke-width="2"/><line x1="50" y1="37.5" x2="80" y2="37.5" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="2 2"/><text x="65" y="32.5" font-family="Inter" font-size="12" fill="#111827">r</text></svg></div><label for="c-radius" class="block text-sm font-medium text-gray-700 mb-1">Radius (r) <span class="text-gray-400">mm</span></label><input type="number" id="c-radius" value="20" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div id="c-rectangleInputs" class="input-group p-4 bg-white rounded-lg border"><div class="flex justify-center my-2"><svg width="80" height="60" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="20" y="15" width="60" height="45" stroke="#4F46E5" stroke-width="2"/><text x="48" y="72" font-family="Inter" font-size="12" fill="#111827">b</text><text x="5" y="40" font-family="Inter" font-size="12" fill="#111827">h</text></svg></div><div class="grid grid-cols-2 gap-4"><div><label for="c-rectWidth" class="block text-sm font-medium text-gray-700 mb-1">Width (b) <span class="text-gray-400">mm</span></label><input type="number" id="c-rectWidth" value="20" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div><div><label for="c-rectHeight" class="block text-sm font-medium text-gray-700 mb-1">Height (h) <span class="text-gray-400">mm</span></label><input type="number" id="c-rectHeight" value="40" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div></div></div>
+                        <div id="c-triangleInputs" class="input-group p-4 bg-white rounded-lg border"><div class="flex justify-center my-2"><svg width="100" height="70" viewBox="0 0 120 85" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M60 10 L110 75 L10 75 Z" stroke="#4F46E5" stroke-width="2" fill-opacity="0.1" fill="#C7D2FE"/><text x="5" y="45" font-family="Inter" font-size="12" fill="#111827">c</text><text x="100" y="45" font-family="Inter" font-size="12" fill="#111827">b</text><text x="55" y="85" font-family="Inter" font-size="12" fill="#111827">a</text></svg></div><p class="text-xs text-center text-gray-500 mb-3">Side 'a' is the base used for the Moment of Inertia calculation.</p><div class="grid grid-cols-3 gap-2"><div><label for="c-sideA" class="block text-sm font-medium text-gray-700 mb-1">Base (a)</label><input type="number" id="c-sideA" value="50" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div><div><label for="c-sideB" class="block text-sm font-medium text-gray-700 mb-1">Side b</label><input type="number" id="c-sideB" value="50" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div><div><label for="c-sideC" class="block text-sm font-medium text-gray-700 mb-1">Side c</label><input type="number" id="c-sideC" value="50" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div></div><p id="c-triangleError" class="text-xs text-red-500 mt-2 hidden">These side lengths do not form a valid triangle.</p></div>
+                    </div>
+                    <button id="c-solveButton" class="w-full mt-8 bg-gradient-to-r from-indigo-600 to-purple-500 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-300 transform hover:scale-105 shadow-lg">Calculate Deflection</button>
+                </div>
+                <div class="lg:col-span-3">
+                    <div class="bg-slate-200/60 p-4 rounded-xl border border-slate-200 flex items-center justify-center"><canvas id="c-beamCanvas" style="width: 100%; height: auto; aspect-ratio: 2 / 1;"></canvas></div>
+                    <div class="grid sm:grid-cols-2 gap-4 mt-4 text-center">
+                        <div class="bg-indigo-100 p-4 rounded-lg border border-indigo-200"><h3 class="font-semibold text-indigo-800 text-sm tracking-wider uppercase">Moment of Inertia (I)</h3><p id="c-inertiaResult" class="text-2xl font-bold text-indigo-600 mt-1">0.00 <span class="text-base font-normal">mm⁴</span></p></div>
+                        <div class="bg-purple-100 p-4 rounded-lg border border-purple-200"><h3 class="font-semibold text-purple-800 text-sm tracking-wider uppercase">Max Deflection (δ)</h3><p id="c-maxDeflection" class="text-2xl font-bold text-purple-600 mt-1">0.00 <span class="text-base font-normal">mm</span></p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Simply Supported Simulator Page -->
+    <div id="simply-supported-page" class="simulator-page">
+        <div class="w-full max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-10 min-h-screen">
+            <div class="text-center mb-10">
+                <a href="#" onclick="showHub()" class="text-purple-600 hover:text-purple-800 mb-4 inline-block">&larr; Back to Home</a>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-500">Simply Supported Beam Simulator</h1>
+                <p class="text-gray-600 mt-3 text-lg">An interactive tool for detailed beam deflection analysis.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-2 bg-slate-50 p-6 rounded-xl border border-slate-200 h-fit">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Parameters</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div><label for="ss-beamLength" class="block text-sm font-medium text-gray-700 mb-1">Length (L) <span class="text-gray-400">mm</span></label><input type="number" id="ss-beamLength" value="1000" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                        <div><label for="ss-youngsModulus" class="block text-sm font-medium text-gray-700 mb-1">E <span class="text-gray-400">MPa</span></label><input type="number" id="ss-youngsModulus" value="200000" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                        <div><label for="ss-pointLoad" class="block text-sm font-medium text-gray-700 mb-1">Load (P) <span class="text-gray-400">N</span></label><input type="number" id="ss-pointLoad" value="500" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                        <div><label for="ss-loadPosition" class="block text-sm font-medium text-gray-700 mb-1">Load Pos. (a) <span class="text-gray-400">mm</span></label><input type="number" id="ss-loadPosition" value="500" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                    </div>
+                    <div class="border-t pt-6">
+                        <label for="ss-crossSection" class="block text-sm font-bold text-gray-800 mb-2">Cross-Section Shape</label>
+                        <select id="ss-crossSection" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="circle" selected>Circle</option><option value="rectangle">Rectangle</option><option value="triangle">Triangle</option>
+                        </select>
+                    </div>
+                    <div class="mt-4 space-y-4">
+                        <div id="ss-circleInputs" class="input-group p-4 bg-white rounded-lg border"><div class="flex justify-center my-2"><svg width="80" height="60" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="37.5" r="30" stroke="#4F46E5" stroke-width="2"/><line x1="50" y1="37.5" x2="80" y2="37.5" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="2 2"/><text x="65" y="32.5" font-family="Inter" font-size="12" fill="#111827">r</text></svg></div><label for="ss-radius" class="block text-sm font-medium text-gray-700 mb-1">Radius (r) <span class="text-gray-400">mm</span></label><input type="number" id="ss-radius" value="20" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                        <div id="ss-rectangleInputs" class="input-group p-4 bg-white rounded-lg border"><div class="flex justify-center my-2"><svg width="80" height="60" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="20" y="15" width="60" height="45" stroke="#4F46E5" stroke-width="2"/><text x="48" y="72" font-family="Inter" font-size="12" fill="#111827">b</text><text x="5" y="40" font-family="Inter" font-size="12" fill="#111827">h</text></svg></div><div class="grid grid-cols-2 gap-4"><div><label for="ss-rectWidth" class="block text-sm font-medium text-gray-700 mb-1">Width (b) <span class="text-gray-400">mm</span></label><input type="number" id="ss-rectWidth" value="20" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div><div><label for="ss-rectHeight" class="block text-sm font-medium text-gray-700 mb-1">Height (h) <span class="text-gray-400">mm</span></label><input type="number" id="ss-rectHeight" value="40" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div></div></div>
+                        <div id="ss-triangleInputs" class="input-group p-4 bg-white rounded-lg border"><div class="flex justify-center my-2"><svg width="100" height="70" viewBox="0 0 120 85" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M60 10 L110 75 L10 75 Z" stroke="#4F46E5" stroke-width="2" fill-opacity="0.1" fill="#C7D2FE"/><text x="5" y="45" font-family="Inter" font-size="12" fill="#111827">c</text><text x="100" y="45" font-family="Inter" font-size="12" fill="#111827">b</text><text x="55" y="85" font-family="Inter" font-size="12" fill="#111827">a</text></svg></div><p class="text-xs text-center text-gray-500 mb-3">Side 'a' is the base used for the Moment of Inertia calculation.</p><div class="grid grid-cols-3 gap-2"><div><label for="ss-sideA" class="block text-sm font-medium text-gray-700 mb-1">Base (a)</label><input type="number" id="ss-sideA" value="50" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div><div><label for="ss-sideB" class="block text-sm font-medium text-gray-700 mb-1">Side b</label><input type="number" id="ss-sideB" value="50" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div><div><label for="ss-sideC" class="block text-sm font-medium text-gray-700 mb-1">Side c</label><input type="number" id="ss-sideC" value="50" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div></div><p id="ss-triangleError" class="text-xs text-red-500 mt-2 hidden">These side lengths do not form a valid triangle.</p></div>
+                    </div>
+                    <button id="ss-solveButton" class="w-full mt-8 bg-gradient-to-r from-indigo-600 to-purple-500 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-300 transform hover:scale-105 shadow-lg">Calculate Deflection</button>
+                </div>
+                <div class="lg:col-span-3">
+                    <div class="bg-slate-200/60 p-4 rounded-xl border border-slate-200 flex items-center justify-center"><canvas id="ss-beamCanvas" style="width: 100%; height: auto; aspect-ratio: 2 / 1;"></canvas></div>
+                    <div class="grid sm:grid-cols-2 gap-4 mt-4 text-center">
+                        <div class="bg-indigo-100 p-4 rounded-lg border border-indigo-200"><h3 class="font-semibold text-indigo-800 text-sm tracking-wider uppercase">Moment of Inertia (I)</h3><p id="ss-inertiaResult" class="text-2xl font-bold text-indigo-600 mt-1">0.00 <span class="text-base font-normal">mm⁴</span></p></div>
+                        <div class="bg-purple-100 p-4 rounded-lg border border-purple-200"><h3 class="font-semibold text-purple-800 text-sm tracking-wider uppercase">Max Deflection (δ)</h3><p id="ss-maxDeflection" class="text-2xl font-bold text-purple-600 mt-1">0.00 <span class="text-base font-normal">mm</span></p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
-        // --- Element References ---
-        const canvas = document.getElementById('beamCanvas');
-        const ctx = canvas.getContext('2d');
-        const solveButton = document.getElementById('solveButton');
-        
-        const beamLengthInput = document.getElementById('beamLength');
-        const youngsModulusInput = document.getElementById('youngsModulus');
-        const pointLoadInput = document.getElementById('pointLoad');
-        const loadPositionInput = document.getElementById('loadPosition');
-        
-        const crossSectionSelect = document.getElementById('crossSection');
-        const circleInputs = document.getElementById('circleInputs');
-        const rectangleInputs = document.getElementById('rectangleInputs');
-        const triangleInputs = document.getElementById('triangleInputs');
-        const triangleError = document.getElementById('triangleError');
-        
-        const inertiaResultText = document.getElementById('inertiaResult');
-        const maxDeflectionText = document.getElementById('maxDeflection');
+        // --- Navigation ---
+        const hubPage = document.getElementById('hub-page');
+        const cantileverPage = document.getElementById('cantilever-page');
+        const simplySupportedPage = document.getElementById('simply-supported-page');
 
-        // --- Global State ---
-        let state = { L: 1000, E: 200000, P: 500, a: 1000 };
+        function showSimulator(type) {
+            hubPage.style.display = 'none';
+            cantileverPage.style.display = 'none';
+            simplySupportedPage.style.display = 'none';
+            window.scrollTo(0, 0);
 
-        // --- Core Functions ---
-        function calculateInertia() {
-            const type = crossSectionSelect.value;
-            let I = 0;
-            triangleError.classList.add('hidden');
+            if (type === 'cantilever') {
+                cantileverPage.style.display = 'block';
+                if (!cantileverSim.isInitialized) cantileverSim.init();
+                cantileverSim.redraw();
+            } else if (type === 'simply-supported') {
+                simplySupportedPage.style.display = 'block';
+                if (!simplySupportedSim.isInitialized) simplySupportedSim.init();
+                simplySupportedSim.redraw();
+            }
+        }
 
-            if (type === 'circle') {
-                const r = parseFloat(document.getElementById('radius').value) || 0;
-                I = (Math.PI * Math.pow(r, 4)) / 4;
-            } else if (type === 'rectangle') {
-                const b = parseFloat(document.getElementById('rectWidth').value) || 0;
-                const h = parseFloat(document.getElementById('rectHeight').value) || 0;
-                I = (b * Math.pow(h, 3)) / 12;
-            } else if (type === 'triangle') {
-                const sA = parseFloat(document.getElementById('sideA').value) || 0; // Base 'b' for MoI formula
-                const sB = parseFloat(document.getElementById('sideB').value) || 0;
-                const sC = parseFloat(document.getElementById('sideC').value) || 0;
-                // Triangle inequality theorem
-                if (sA > 0 && sB > 0 && sC > 0 && sA + sB > sC && sA + sC > sB && sB + sC > sA) {
-                    const s = (sA + sB + sC) / 2; // Semi-perimeter
-                    const area = Math.sqrt(s * (s - sA) * (s - sB) * (s - sC));
-                    const height = (2 * area) / sA; // Height relative to side A as base
-                    I = (sA * Math.pow(height, 3)) / 36; // Use sA as base 'b'
-                } else {
-                    triangleError.classList.remove('hidden');
-                    I = 0; // Invalid triangle
+        function showHub() {
+            hubPage.style.display = 'block';
+            cantileverPage.style.display = 'none';
+            simplySupportedPage.style.display = 'none';
+            window.scrollTo(0, 0);
+        }
+
+        // --- Cantilever Simulator Logic ---
+        const cantileverSim = {
+            isInitialized: false,
+            init() {
+                this.isInitialized = true;
+                this.setup(); 
+                this.solveButton.click(); 
+            },
+            setup() {
+                this.canvas = document.getElementById('c-beamCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.solveButton = document.getElementById('c-solveButton');
+                this.beamLengthInput = document.getElementById('c-beamLength');
+                this.youngsModulusInput = document.getElementById('c-youngsModulus');
+                this.pointLoadInput = document.getElementById('c-pointLoad');
+                this.loadPositionInput = document.getElementById('c-loadPosition');
+                this.crossSectionSelect = document.getElementById('c-crossSection');
+                this.circleInputs = document.getElementById('c-circleInputs');
+                this.rectangleInputs = document.getElementById('c-rectangleInputs');
+                this.triangleInputs = document.getElementById('c-triangleInputs');
+                this.triangleError = document.getElementById('c-triangleError');
+                this.inertiaResultText = document.getElementById('c-inertiaResult');
+                this.maxDeflectionText = document.getElementById('c-maxDeflection');
+                this.state = { L: 1000, E: 200000, P: 500, a: 1000 };
+                
+                this.solveButton.addEventListener('click', () => {
+                    this.state.L = parseFloat(this.beamLengthInput.value) || 0;
+                    this.state.E = parseFloat(this.youngsModulusInput.value) || 0;
+                    this.state.P = parseFloat(this.pointLoadInput.value) || 0;
+                    this.state.a = Math.min(parseFloat(this.loadPositionInput.value) || 0, this.state.L);
+                    this.loadPositionInput.value = this.state.a; 
+                    this.updateUI();
+                    this.redraw();
+                });
+                this.crossSectionSelect.addEventListener('change', this.handleSectionChange.bind(this));
+                window.addEventListener('resize', this.redraw.bind(this));
+                this.handleSectionChange();
+            },
+            calculateInertia() {
+                const type = this.crossSectionSelect.value; let I = 0; this.triangleError.classList.add('hidden');
+                if (type === 'circle') { const r = parseFloat(document.getElementById('c-radius').value) || 0; I = (Math.PI * Math.pow(r, 4)) / 4;
+                } else if (type === 'rectangle') { const b = parseFloat(document.getElementById('c-rectWidth').value) || 0; const h = parseFloat(document.getElementById('c-rectHeight').value) || 0; I = (b * Math.pow(h, 3)) / 12;
+                } else if (type === 'triangle') {
+                    const sA = parseFloat(document.getElementById('c-sideA').value) || 0, sB = parseFloat(document.getElementById('c-sideB').value) || 0, sC = parseFloat(document.getElementById('c-sideC').value) || 0;
+                    if (sA > 0 && sB > 0 && sC > 0 && sA + sB > sC && sA + sC > sB && sB + sC > sA) { const s = (sA + sB + sC) / 2, area = Math.sqrt(s * (s - sA) * (s - sB) * (s - sC)), height = (2 * area) / sA; I = (sA * Math.pow(height, 3)) / 36;
+                    } else { this.triangleError.classList.remove('hidden'); I = 0; }
+                } return I;
+            },
+            drawBeam() {
+                const { L, E, P, a } = this.state; const I = this.calculateInertia(); const { width: canvasWidth, height: canvasHeight } = this.canvas; const padding = Math.min(50, canvasWidth / 12); this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const fixedSupportWidth = 10, fixedSupportHeight = canvasHeight * 0.7; this.ctx.fillStyle = '#4B5563'; this.ctx.fillRect(padding - fixedSupportWidth, (canvasHeight / 2) - (fixedSupportHeight / 2), fixedSupportWidth, fixedSupportHeight);
+                const beamDisplayLength = canvasWidth - 2 * padding, startX = padding, startY = canvasHeight / 2;
+                this.ctx.beginPath(); this.ctx.moveTo(startX, startY); this.ctx.lineTo(startX + beamDisplayLength, startY); this.ctx.strokeStyle = '#9CA3AF'; this.ctx.lineWidth = 3; this.ctx.setLineDash([5, 5]); this.ctx.stroke(); this.ctx.setLineDash([]);
+                if (I === 0 || E === 0) return; const EI = E * I; const maxDeflection = (P > 0 && a > 0) ? (P * a**2 * (3*L - a)) / (6 * EI) : 0; const deflectionScale = (maxDeflection > 0) ? (canvasHeight / 3) / maxDeflection : 0;
+                this.ctx.beginPath(); this.ctx.moveTo(startX, startY); const gradient = this.ctx.createLinearGradient(startX, startY, startX + beamDisplayLength, startY); gradient.addColorStop(0, '#4f46e5'); gradient.addColorStop(1, '#a855f7'); this.ctx.strokeStyle = gradient; this.ctx.lineWidth = 6; this.ctx.lineCap = 'round';
+                for (let x = 0; x <= L; x++) { let deflection = 0; if (x <= a) { deflection = (P * x**2 * (3*a - x)) / (6 * EI); } else { deflection = (P * a**2 * (3*x - a)) / (6 * EI); } const x_canvas = startX + (x / L) * beamDisplayLength, y_canvas = startY + deflection * deflectionScale; this.ctx.lineTo(x_canvas, y_canvas); } this.ctx.stroke();
+                if (P > 0) {
+                    const load_x_canvas = startX + (a / L) * beamDisplayLength; let load_y_deflected = startY; if (EI > 0) { const load_pos_deflection = (P * a**2 * (3*a - a)) / (6*EI); load_y_deflected = startY + load_pos_deflection * deflectionScale; }
+                    this.ctx.strokeStyle = '#EF4444'; this.ctx.fillStyle = '#EF4444'; this.ctx.lineWidth = 2.5; this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected - 30); this.ctx.lineTo(load_x_canvas, load_y_deflected); this.ctx.stroke(); this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected); this.ctx.lineTo(load_x_canvas - 6, load_y_deflected - 12); this.ctx.lineTo(load_x_canvas + 6, load_y_deflected - 12); this.ctx.closePath(); this.ctx.fill();
                 }
-            }
-            return I;
-        }
+            },
+            redraw() { const { width, height } = this.canvas.parentElement.getBoundingClientRect(); this.canvas.width = width; this.canvas.height = height; this.drawBeam(); },
+            updateUI() { const I = this.calculateInertia(); const { L, E, P, a } = this.state; const EI = E * I; let maxDeflection = 0; if (EI > 0) { maxDeflection = (P * a**2 * (3*L - a)) / (6 * EI); } this.inertiaResultText.innerHTML = `${I.toLocaleString(undefined, {maximumFractionDigits: 2})} <span class="text-base font-normal">mm⁴</span>`; this.maxDeflectionText.innerHTML = `${maxDeflection.toFixed(4)} <span class="text-base font-normal">mm</span>`; },
+            handleSectionChange() { const type = this.crossSectionSelect.value; this.circleInputs.classList.toggle('active', type === 'circle'); this.rectangleInputs.classList.toggle('active', type === 'rectangle'); this.triangleInputs.classList.toggle('active', type === 'triangle'); }
+        };
 
-        function drawBeam() {
-            const { L, E, P, a } = state;
-            const I = calculateInertia();
-            
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            const padding = Math.min(50, canvasWidth / 12);
+        // --- Simply Supported Simulator Logic ---
+        const simplySupportedSim = {
+            isInitialized: false,
+            init() { 
+                this.isInitialized = true;
+                this.setup(); 
+                this.solveButton.click(); 
+            },
+            setup() {
+                this.canvas = document.getElementById('ss-beamCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.solveButton = document.getElementById('ss-solveButton');
+                this.beamLengthInput = document.getElementById('ss-beamLength');
+                this.youngsModulusInput = document.getElementById('ss-youngsModulus');
+                this.pointLoadInput = document.getElementById('ss-pointLoad');
+                this.loadPositionInput = document.getElementById('ss-loadPosition');
+                this.crossSectionSelect = document.getElementById('ss-crossSection');
+                this.circleInputs = document.getElementById('ss-circleInputs');
+                this.rectangleInputs = document.getElementById('ss-rectangleInputs');
+                this.triangleInputs = document.getElementById('ss-triangleInputs');
+                this.triangleError = document.getElementById('ss-triangleError');
+                this.inertiaResultText = document.getElementById('ss-inertiaResult');
+                this.maxDeflectionText = document.getElementById('ss-maxDeflection');
+                this.state = { L: 1000, E: 200000, P: 500, a: 500 };
 
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-            
-            // Draw Support
-            const fixedSupportWidth = 10;
-            const fixedSupportHeight = canvasHeight * 0.7;
-            ctx.fillStyle = '#4B5563';
-            ctx.fillRect(padding - fixedSupportWidth, (canvasHeight / 2) - (fixedSupportHeight / 2), fixedSupportWidth, fixedSupportHeight);
-
-            const beamDisplayLength = canvasWidth - 2 * padding;
-            const startX = padding;
-            const startY = canvasHeight / 2;
-            
-            // Draw Original Beam (Dotted Line)
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(startX + beamDisplayLength, startY);
-            ctx.strokeStyle = '#9CA3AF';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([5, 5]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            if (I === 0 || E === 0) return; // Don't draw if stiffness is zero
-
-            const EI = E * I;
-            // The maximum deflection occurs at the end of the beam (x=L)
-            const maxDeflection = (P > 0 && a > 0) ? (P * a**2 * (3*L - a)) / (6 * EI) : 0;
-            
-            const deflectionScale = (maxDeflection > 0) ? (canvasHeight / 3) / maxDeflection : 0;
-
-            // Draw Deflected Beam
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            const gradient = ctx.createLinearGradient(startX, startY, startX + beamDisplayLength, startY);
-            gradient.addColorStop(0, '#4f46e5');
-            gradient.addColorStop(1, '#a855f7');
-            ctx.strokeStyle = gradient;
-            ctx.lineWidth = 6;
-            ctx.lineCap = 'round';
-            
-            for (let x = 0; x <= L; x++) {
-                let deflection = 0;
-                if (x <= a) {
-                    deflection = (P * x**2 * (3*a - x)) / (6 * EI);
-                } else { // x > a
-                    deflection = (P * a**2 * (3*x - a)) / (6 * EI);
+                this.solveButton.addEventListener('click', () => {
+                    this.state.L = parseFloat(this.beamLengthInput.value) || 0;
+                    this.state.E = parseFloat(this.youngsModulusInput.value) || 0;
+                    this.state.P = parseFloat(this.pointLoadInput.value) || 0;
+                    this.state.a = Math.min(parseFloat(this.loadPositionInput.value) || 0, this.state.L);
+                    this.loadPositionInput.value = this.state.a;
+                    this.updateUI();
+                    this.redraw();
+                });
+                this.crossSectionSelect.addEventListener('change', this.handleSectionChange.bind(this));
+                window.addEventListener('resize', this.redraw.bind(this));
+                this.handleSectionChange();
+            },
+            calculateInertia() {
+                const type = this.crossSectionSelect.value; let I = 0; this.triangleError.classList.add('hidden');
+                if (type === 'circle') { const r = parseFloat(document.getElementById('ss-radius').value) || 0; I = (Math.PI * Math.pow(r, 4)) / 4;
+                } else if (type === 'rectangle') { const b = parseFloat(document.getElementById('ss-rectWidth').value) || 0; const h = parseFloat(document.getElementById('ss-rectHeight').value) || 0; I = (b * Math.pow(h, 3)) / 12;
+                } else if (type === 'triangle') {
+                    const sA = parseFloat(document.getElementById('ss-sideA').value) || 0, sB = parseFloat(document.getElementById('ss-sideB').value) || 0, sC = parseFloat(document.getElementById('ss-sideC').value) || 0;
+                    if (sA > 0 && sB > 0 && sC > 0 && sA + sB > sC && sA + sC > sB && sB + sC > sA) { const s = (sA + sB + sC) / 2, area = Math.sqrt(s * (s - sA) * (s - sB) * (s - sC)), height = (2 * area) / sA; I = (sA * Math.pow(height, 3)) / 36;
+                    } else { this.triangleError.classList.remove('hidden'); I = 0; }
+                } return I;
+            },
+            drawBeam() {
+                const { L, E, P, a } = this.state; const I = this.calculateInertia(); const { width: canvasWidth, height: canvasHeight } = this.canvas; const padding = Math.min(60, canvasWidth / 10); this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const beamDisplayLength = canvasWidth - 2 * padding, startX = padding, startY = canvasHeight / 2;
+                this.ctx.fillStyle = '#4B5563'; this.ctx.beginPath(); this.ctx.moveTo(startX, startY); this.ctx.lineTo(startX - 10, startY + 15); this.ctx.lineTo(startX + 10, startY + 15); this.ctx.closePath(); this.ctx.fill();
+                this.ctx.beginPath(); this.ctx.arc(startX + beamDisplayLength, startY + 10, 10, 0, 2 * Math.PI); this.ctx.fill(); this.ctx.beginPath(); this.ctx.moveTo(startX + beamDisplayLength - 15, startY + 20); this.ctx.lineTo(startX + beamDisplayLength + 15, startY + 20); this.ctx.strokeStyle = '#4B5563'; this.ctx.lineWidth = 2; this.ctx.stroke();
+                this.ctx.beginPath(); this.ctx.moveTo(startX, startY); this.ctx.lineTo(startX + beamDisplayLength, startY); this.ctx.strokeStyle = '#9CA3AF'; this.ctx.lineWidth = 3; this.ctx.setLineDash([5, 5]); this.ctx.stroke(); this.ctx.setLineDash([]);
+                if (I === 0 || E === 0 || L === 0) return; const EI = E * I; const b = L - a;
+                let maxDeflection = 0;
+                if (P > 0 && a > 0 && a < L) { if (a >= L / 2) { const x_max = Math.sqrt((L*L - b*b) / 3); maxDeflection = (P * b * x_max) / (6 * L * EI) * (L*L - b*b - x_max*x_max); } else { const x_max = L - Math.sqrt((L*L - a*a) / 3); maxDeflection = (P*a*(L-x_max))/(6*L*EI)*(L*L - a*a - (L-x_max)*(L-x_max)); }
+                } else if (P > 0 && a === L / 2){ maxDeflection = (P * L**3) / (48 * EI); } maxDeflection = Math.abs(maxDeflection);
+                const deflectionScale = (maxDeflection > 0) ? (canvasHeight / 3) / maxDeflection : 0;
+                this.ctx.beginPath(); this.ctx.moveTo(startX, startY); const gradient = this.ctx.createLinearGradient(startX, startY, startX + beamDisplayLength, startY); gradient.addColorStop(0, '#4f46e5'); gradient.addColorStop(1, '#a855f7'); this.ctx.strokeStyle = gradient; this.ctx.lineWidth = 6; this.ctx.lineCap = 'round';
+                for (let x = 0; x <= L; x++) { let deflection = 0; if (x <= a) { deflection = (P * b * x) / (6 * L * EI) * (L*L - b*b - x*x); } else { deflection = (P * a * (L - x)) / (6 * L * EI) * (2*L*x - x*x - a*a); } const x_canvas = startX + (x / L) * beamDisplayLength; const y_canvas = startY + deflection * deflectionScale; this.ctx.lineTo(x_canvas, y_canvas); } this.ctx.stroke();
+                if (P > 0) {
+                    const load_x_canvas = startX + (a / L) * beamDisplayLength; let load_y_deflected = startY; if (EI > 0) { let deflection_at_a = (P * b * a) / (6 * L * EI) * (L*L - b*b - a*a); load_y_deflected = startY + deflection_at_a * deflectionScale; }
+                    this.ctx.strokeStyle = '#EF4444'; this.ctx.fillStyle = '#EF4444'; this.ctx.lineWidth = 2.5; this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected - 30); this.ctx.lineTo(load_x_canvas, load_y_deflected); this.ctx.stroke(); this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected); this.ctx.lineTo(load_x_canvas - 6, load_y_deflected - 12); this.ctx.lineTo(load_x_canvas + 6, load_y_deflected - 12); this.ctx.closePath(); this.ctx.fill();
                 }
-                const x_canvas = startX + (x / L) * beamDisplayLength;
-                const y_canvas = startY + deflection * deflectionScale;
-                ctx.lineTo(x_canvas, y_canvas);
-            }
-            ctx.stroke();
-
-            // Draw Load Arrow
-            if (P > 0) {
-                const load_x_canvas = startX + (a / L) * beamDisplayLength;
-                let load_y_deflected = startY;
-                if (EI > 0) {
-                    // Deflection at point 'a'
-                    const load_pos_deflection = (P * a**2 * (3*a - a)) / (6*EI);
-                    load_y_deflected = startY + load_pos_deflection * deflectionScale;
-                }
-
-                ctx.strokeStyle = '#EF4444';
-                ctx.fillStyle = '#EF4444';
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                ctx.moveTo(load_x_canvas, load_y_deflected - 30);
-                ctx.lineTo(load_x_canvas, load_y_deflected);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(load_x_canvas, load_y_deflected);
-                ctx.lineTo(load_x_canvas - 6, load_y_deflected - 12);
-                ctx.lineTo(load_x_canvas + 6, load_y_deflected - 12);
-                ctx.closePath();
-                ctx.fill();
-            }
-        }
-
-        function redraw() {
-            const { width, height } = canvas.getBoundingClientRect();
-            canvas.width = width;
-            canvas.height = height;
-            drawBeam();
-        }
-        
-        function updateUI() {
-            const I = calculateInertia();
-            const { L, E, P, a } = state;
-            const EI = E * I;
-            let maxDeflection = 0;
-            if (EI > 0) {
-                // Max deflection for this case is always at the free end (x=L)
-                maxDeflection = (P * a**2 * (3*L - a)) / (6 * EI);
-            }
-            inertiaResultText.innerHTML = `${I.toLocaleString(undefined, {maximumFractionDigits: 2})} <span class="text-base font-normal">mm⁴</span>`;
-            maxDeflectionText.innerHTML = `${maxDeflection.toFixed(4)} <span class="text-base font-normal">mm</span>`;
-        }
-
-        function handleSectionChange() {
-            const type = crossSectionSelect.value;
-            circleInputs.classList.toggle('active', type === 'circle');
-            rectangleInputs.classList.toggle('active', type === 'rectangle');
-            triangleInputs.classList.toggle('active', type === 'triangle');
-        }
-
-        // --- Event Listeners ---
-        solveButton.addEventListener('click', () => {
-            state.L = parseFloat(beamLengthInput.value) || 0;
-            state.E = parseFloat(youngsModulusInput.value) || 0;
-            state.P = parseFloat(pointLoadInput.value) || 0;
-            state.a = Math.min(parseFloat(loadPositionInput.value) || 0, state.L);
-            loadPositionInput.value = state.a; 
-            
-            updateUI();
-            redraw();
-        });
-
-        crossSectionSelect.addEventListener('change', handleSectionChange);
-        window.addEventListener('resize', redraw);
-
-        // --- Initial Load ---
-        window.onload = () => {
-            handleSectionChange();
-            solveButton.click(); 
+            },
+            redraw() { const { width, height } = this.canvas.parentElement.getBoundingClientRect(); this.canvas.width = width; this.canvas.height = height; this.drawBeam(); },
+            updateUI() {
+                const I = this.calculateInertia(); const { L, E, P, a } = this.state; const EI = E * I; const b = L - a; let maxDeflection = 0;
+                if (EI > 0 && P > 0 && a > 0 && a < L) { if (a >= L / 2) { const x_max = Math.sqrt((L*L - b*b) / 3); maxDeflection = (P * b * x_max) / (6 * L * EI) * (L*L - b*b - x_max*x_max); } else { const x_max = L - Math.sqrt((L*L - a*a) / 3); maxDeflection = (P*a*(L-x_max))/(6*L*EI)*(L*L - a*a - (L-x_max)*(L-x_max)); } } else if (EI > 0 && P > 0 && a === L/2){ maxDeflection = (P * L**3) / (48 * EI); }
+                this.inertiaResultText.innerHTML = `${I.toLocaleString(undefined, {maximumFractionDigits: 2})} <span class="text-base font-normal">mm⁴</span>`; this.maxDeflectionText.innerHTML = `${Math.abs(maxDeflection).toFixed(4)} <span class="text-base font-normal">mm</span>`;
+            },
+            handleSectionChange() { const type = this.crossSectionSelect.value; this.circleInputs.classList.toggle('active', type === 'circle'); this.rectangleInputs.classList.toggle('active', type === 'rectangle'); this.triangleInputs.classList.toggle('active', type === 'triangle'); }
         };
     </script>
+
 </body>
 </html>
-
-
-
-
-
-
