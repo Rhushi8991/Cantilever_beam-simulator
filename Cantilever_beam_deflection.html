@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cantilever Beam Deflection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-10">
+        
+        <div class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-500">
+                Cantilever Beam Simulator
+            </h1>
+            <p class="text-gray-600 mt-3 text-lg">An interactive tool to visualize beam deflection under a point load.</p>
+        </div>
+
+        <!-- Main content area with controls and canvas -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Input Controls -->
+            <div class="lg:col-span-1 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">Parameters</h2>
+                
+                <div class="mb-5">
+                    <label for="beamLength" class="block text-sm font-medium text-gray-700 mb-2">Beam Length (L)</label>
+                    <input type="number" id="beamLength" value="100" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                    <p class="text-xs text-gray-500 mt-1">Represents the total length of the beam.</p>
+                </div>
+                
+                <div class="mb-8">
+                    <label for="pointLoad" class="block text-sm font-medium text-gray-700 mb-2">Point Load (P)</label>
+                    <input type="number" id="pointLoad" value="50" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                     <p class="text-xs text-gray-500 mt-1">Force applied at the free end of the beam.</p>
+                </div>
+                
+                <button id="solveButton" class="w-full bg-gradient-to-r from-indigo-600 to-purple-500 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    Solve
+                </button>
+
+                <div id="results" class="mt-8 text-center bg-indigo-50 p-4 rounded-lg border border-indigo-200 hidden">
+                     <h3 class="font-semibold text-indigo-800 text-sm tracking-wider uppercase">Max Deflection (δ)</h3>
+                     <p id="maxDeflection" class="text-3xl font-bold text-indigo-600 mt-1">0.00</p>
+                </div>
+            </div>
+
+            <!-- Canvas for drawing the beam -->
+            <div class="lg:col-span-2 bg-gray-100 p-4 rounded-xl border border-gray-200 flex items-center justify-center">
+                <canvas id="beamCanvas" width="600" height="300"></canvas>
+            </div>
+
+        </div>
+
+        <!-- Explanation Section -->
+        <div class="mt-12 pt-8 border-t border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">How It Works</h2>
+            <div class="text-gray-600 space-y-3 text-base">
+                <p>
+                    This simulator calculates and visualizes the shape of a cantilever beam when a point load (P) is applied at its free end. The original, undeflected position of the beam is shown as a <span class="border-b-2 border-dashed border-gray-400">dotted gray line</span>. The deflected shape is shown as a <span class="font-bold text-indigo-600">solid colored line</span>.
+                </p>
+                <p>
+                    The deflection `y` at any distance `x` from the fixed end is calculated using the following formula from beam theory:
+                </p>
+                <div class="bg-gray-100 p-4 rounded-lg text-center text-lg font-mono my-4 border">
+                    y(x) = (P * x²) / (6 * EI) * (3L - x)
+                </div>
+                <p>
+                    For this visualization, the material's Young's Modulus (E) and the beam's Moment of Inertia (I) are combined into a single constant value (EI) to produce a clear visual representation of the deflection shape. The calculated maximum deflection is displayed in the results panel.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Get references to HTML elements
+        const canvas = document.getElementById('beamCanvas');
+        const ctx = canvas.getContext('2d');
+        const beamLengthInput = document.getElementById('beamLength');
+        const pointLoadInput = document.getElementById('pointLoad');
+        const solveButton = document.getElementById('solveButton');
+        const resultsDiv = document.getElementById('results');
+        const maxDeflectionText = document.getElementById('maxDeflection');
+
+        // --- Drawing Configuration ---
+        const padding = 50;
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const fixedSupportWidth = 10;
+        const fixedSupportHeight = 80; // Made support taller
+
+        // Function to draw the fixed support on the left
+        function drawSupport() {
+            ctx.fillStyle = '#4B5563'; // Darker Gray color
+            ctx.fillRect(padding - fixedSupportWidth, (canvasHeight / 2) - (fixedSupportHeight / 2), fixedSupportWidth, fixedSupportHeight);
+            
+            ctx.strokeStyle = '#9CA3AF';
+            ctx.lineWidth = 1.5;
+            for (let i = 5; i < fixedSupportHeight; i += 8) {
+                ctx.beginPath();
+                ctx.moveTo(padding - fixedSupportWidth, (canvasHeight / 2) - (fixedSupportHeight / 2) + i);
+                ctx.lineTo(padding, (canvasHeight / 2) - (fixedSupportHeight / 2) + i - 8);
+                ctx.stroke();
+            }
+        }
+        
+        // Function to draw the beam
+        function drawBeam(length, load) {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            drawSupport();
+
+            const beamDisplayLength = canvasWidth - 2 * padding;
+            const startX = padding;
+            const startY = canvasHeight / 2;
+            
+            // --- Draw Original Beam (Dotted Line) ---
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX + beamDisplayLength, startY);
+            ctx.strokeStyle = '#9CA3AF'; // Medium gray
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]); // Set to dotted line
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset to solid for next drawings
+
+            // --- Beam Deflection Calculation ---
+            const EI = 20000000; 
+            const maxDeflection = (load * Math.pow(length, 3)) / (3 * EI);
+            const deflectionScale = 50; 
+
+            // --- Draw Deflected Beam (Solid Line) ---
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            // Use a gradient for the beam for a nicer effect
+            const gradient = ctx.createLinearGradient(startX, startY, startX + beamDisplayLength, startY);
+            gradient.addColorStop(0, '#4f46e5'); // Indigo
+            gradient.addColorStop(1, '#a855f7'); // Purple
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            
+            for (let x_actual = 0; x_actual <= length; x_actual++) {
+                const deflection = (load * Math.pow(x_actual, 2) * (3 * length - x_actual)) / (6 * EI);
+                const x_canvas = startX + (x_actual / length) * beamDisplayLength;
+                const y_canvas = startY + deflection * deflectionScale;
+                ctx.lineTo(x_canvas, y_canvas);
+            }
+            ctx.stroke();
+
+            // --- Draw the Load Arrow ---
+            const endX = startX + beamDisplayLength;
+            const endY_deflected = startY + maxDeflection * deflectionScale;
+
+            ctx.strokeStyle = '#EF4444'; // Red color
+            ctx.fillStyle = '#EF4444';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(endX, endY_deflected - 50);
+            ctx.lineTo(endX, endY_deflected);
+            ctx.stroke();
+            // Arrowhead
+            ctx.beginPath();
+            ctx.moveTo(endX, endY_deflected);
+            ctx.lineTo(endX - 6, endY_deflected - 12);
+            ctx.lineTo(endX + 6, endY_deflected - 12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.font = '16px Inter';
+            ctx.fillText('P', endX + 15, endY_deflected - 25);
+
+            // Update and show results
+            maxDeflectionText.textContent = maxDeflection.toFixed(4);
+            resultsDiv.classList.remove('hidden');
+        }
+
+        // --- Event Listener ---
+        solveButton.addEventListener('click', () => {
+            const length = parseFloat(beamLengthInput.value) || 100;
+            const load = parseFloat(pointLoadInput.value) || 50;
+            if (length > 0) { // Only draw if there is a length
+                drawBeam(length, load);
+            }
+        });
+
+        // --- Initial Draw ---
+        window.onload = () => {
+             // Draw the initial state of the beam when the page loads
+            const initialLength = parseFloat(beamLengthInput.value) || 100;
+            drawBeam(initialLength, 0); // Draw a straight beam initially (load=0)
+            resultsDiv.classList.add('hidden');
+        };
+    </script>
+</body>
+</html>
