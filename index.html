@@ -159,8 +159,9 @@
                 </div>
                 <div class="lg:col-span-3">
                     <div class="bg-slate-200/60 p-4 rounded-xl border border-slate-200 flex items-center justify-center"><canvas id="c-beamCanvas" style="width: 100%; height: auto; aspect-ratio: 2 / 1;"></canvas></div>
-                    <div class="grid sm:grid-cols-2 gap-4 mt-4 text-center">
+                    <div class="grid sm:grid-cols-3 gap-4 mt-4 text-center">
                         <div class="bg-indigo-100 p-4 rounded-lg border border-indigo-200"><h3 class="font-semibold text-indigo-800 text-sm tracking-wider uppercase">Moment of Inertia (I)</h3><p id="c-inertiaResult" class="text-2xl font-bold text-indigo-600 mt-1">0.00 <span class="text-base font-normal">mm⁴</span></p></div>
+                        <div class="bg-green-100 p-4 rounded-lg border border-green-200"><h3 class="font-semibold text-green-800 text-sm tracking-wider uppercase">Deflection at Load</h3><p id="c-loadDeflection" class="text-2xl font-bold text-green-600 mt-1">0.00 <span class="text-base font-normal">mm</span></p></div>
                         <div class="bg-purple-100 p-4 rounded-lg border border-purple-200"><h3 class="font-semibold text-purple-800 text-sm tracking-wider uppercase">Max Deflection (δ)</h3><p id="c-maxDeflection" class="text-2xl font-bold text-purple-600 mt-1">0.00 <span class="text-base font-normal">mm</span></p></div>
                     </div>
                 </div>
@@ -202,8 +203,9 @@
                 </div>
                 <div class="lg:col-span-3">
                     <div class="bg-slate-200/60 p-4 rounded-xl border border-slate-200 flex items-center justify-center"><canvas id="ss-beamCanvas" style="width: 100%; height: auto; aspect-ratio: 2 / 1;"></canvas></div>
-                    <div class="grid sm:grid-cols-2 gap-4 mt-4 text-center">
+                    <div class="grid sm:grid-cols-3 gap-4 mt-4 text-center">
                         <div class="bg-indigo-100 p-4 rounded-lg border border-indigo-200"><h3 class="font-semibold text-indigo-800 text-sm tracking-wider uppercase">Moment of Inertia (I)</h3><p id="ss-inertiaResult" class="text-2xl font-bold text-indigo-600 mt-1">0.00 <span class="text-base font-normal">mm⁴</span></p></div>
+                        <div class="bg-green-100 p-4 rounded-lg border border-green-200"><h3 class="font-semibold text-green-800 text-sm tracking-wider uppercase">Deflection at Load</h3><p id="ss-loadDeflection" class="text-2xl font-bold text-green-600 mt-1">0.00 <span class="text-base font-normal">mm</span></p></div>
                         <div class="bg-purple-100 p-4 rounded-lg border border-purple-200"><h3 class="font-semibold text-purple-800 text-sm tracking-wider uppercase">Max Deflection (δ)</h3><p id="ss-maxDeflection" class="text-2xl font-bold text-purple-600 mt-1">0.00 <span class="text-base font-normal">mm</span></p></div>
                     </div>
                 </div>
@@ -212,175 +214,234 @@
     </div>
     
     <script>
-        // --- Navigation ---
-        const hubPage = document.getElementById('hub-page');
-        const cantileverPage = document.getElementById('cantilever-page');
-        const simplySupportedPage = document.getElementById('simply-supported-page');
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Page Elements ---
+            const hubPage = document.getElementById('hub-page');
+            const cantileverPage = document.getElementById('cantilever-page');
+            const simplySupportedPage = document.getElementById('simply-supported-page');
 
-        function showSimulator(type) {
-            hubPage.style.display = 'none';
-            cantileverPage.style.display = 'none';
-            simplySupportedPage.style.display = 'none';
-            window.scrollTo(0, 0);
+            let activeSim = null;
 
-            if (type === 'cantilever') {
-                cantileverPage.style.display = 'block';
-                if (!cantileverSim.isInitialized) cantileverSim.init();
-                cantileverSim.redraw();
-            } else if (type === 'simply-supported') {
-                simplySupportedPage.style.display = 'block';
-                if (!simplySupportedSim.isInitialized) simplySupportedSim.init();
-                simplySupportedSim.redraw();
+            // --- Navigation Functions ---
+            function showSimulator(type) {
+                hubPage.style.display = 'none';
+                cantileverPage.style.display = 'none';
+                simplySupportedPage.style.display = 'none';
+                window.scrollTo(0, 0);
+
+                if (type === 'cantilever') {
+                    cantileverPage.style.display = 'block';
+                    activeSim = cantileverSim;
+                    if (!activeSim.isInitialized) activeSim.init();
+                    activeSim.redraw();
+                } else if (type === 'simply-supported') {
+                    simplySupportedPage.style.display = 'block';
+                    activeSim = simplySupportedSim;
+                    if (!activeSim.isInitialized) activeSim.init();
+                    activeSim.redraw();
+                }
             }
-        }
 
-        function showHub() {
-            hubPage.style.display = 'block';
-            cantileverPage.style.display = 'none';
-            simplySupportedPage.style.display = 'none';
-            window.scrollTo(0, 0);
-        }
+            function showHub() {
+                hubPage.style.display = 'block';
+                cantileverPage.style.display = 'none';
+                simplySupportedPage.style.display = 'none';
+                activeSim = null;
+                window.scrollTo(0, 0);
+            }
 
-        // --- Cantilever Simulator Logic ---
-        const cantileverSim = {
-            isInitialized: false,
-            init() {
-                this.isInitialized = true;
-                this.setup(); 
-                this.solveButton.click(); 
-            },
-            setup() {
-                this.canvas = document.getElementById('c-beamCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.solveButton = document.getElementById('c-solveButton');
-                this.beamLengthInput = document.getElementById('c-beamLength');
-                this.youngsModulusInput = document.getElementById('c-youngsModulus');
-                this.pointLoadInput = document.getElementById('c-pointLoad');
-                this.loadPositionInput = document.getElementById('c-loadPosition');
-                this.crossSectionSelect = document.getElementById('c-crossSection');
-                this.circleInputs = document.getElementById('c-circleInputs');
-                this.rectangleInputs = document.getElementById('c-rectangleInputs');
-                this.triangleInputs = document.getElementById('c-triangleInputs');
-                this.triangleError = document.getElementById('c-triangleError');
-                this.inertiaResultText = document.getElementById('c-inertiaResult');
-                this.maxDeflectionText = document.getElementById('c-maxDeflection');
-                this.state = { L: 1000, E: 200000, P: 500, a: 1000 };
-                
-                this.solveButton.addEventListener('click', () => {
-                    this.state.L = parseFloat(this.beamLengthInput.value) || 0;
-                    this.state.E = parseFloat(this.youngsModulusInput.value) || 0;
-                    this.state.P = parseFloat(this.pointLoadInput.value) || 0;
-                    this.state.a = Math.min(parseFloat(this.loadPositionInput.value) || 0, this.state.L);
-                    this.loadPositionInput.value = this.state.a; 
-                    this.updateUI();
-                    this.redraw();
-                });
-                this.crossSectionSelect.addEventListener('change', this.handleSectionChange.bind(this));
-                window.addEventListener('resize', this.redraw.bind(this));
-                this.handleSectionChange();
-            },
-            calculateInertia() {
-                const type = this.crossSectionSelect.value; let I = 0; this.triangleError.classList.add('hidden');
-                if (type === 'circle') { const r = parseFloat(document.getElementById('c-radius').value) || 0; I = (Math.PI * Math.pow(r, 4)) / 4;
-                } else if (type === 'rectangle') { const b = parseFloat(document.getElementById('c-rectWidth').value) || 0; const h = parseFloat(document.getElementById('c-rectHeight').value) || 0; I = (b * Math.pow(h, 3)) / 12;
-                } else if (type === 'triangle') {
-                    const sA = parseFloat(document.getElementById('c-sideA').value) || 0, sB = parseFloat(document.getElementById('c-sideB').value) || 0, sC = parseFloat(document.getElementById('c-sideC').value) || 0;
-                    if (sA > 0 && sB > 0 && sC > 0 && sA + sB > sC && sA + sC > sB && sB + sC > sA) { const s = (sA + sB + sC) / 2, area = Math.sqrt(s * (s - sA) * (s - sB) * (s - sC)), height = (2 * area) / sA; I = (sA * Math.pow(height, 3)) / 36;
-                    } else { this.triangleError.classList.remove('hidden'); I = 0; }
-                } return I;
-            },
-            drawBeam() {
-                const { L, E, P, a } = this.state; const I = this.calculateInertia(); const { width: canvasWidth, height: canvasHeight } = this.canvas; const padding = Math.min(50, canvasWidth / 12); this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-                const fixedSupportWidth = 10, fixedSupportHeight = canvasHeight * 0.7; this.ctx.fillStyle = '#4B5563'; this.ctx.fillRect(padding - fixedSupportWidth, (canvasHeight / 2) - (fixedSupportHeight / 2), fixedSupportWidth, fixedSupportHeight);
-                const beamDisplayLength = canvasWidth - 2 * padding, startX = padding, startY = canvasHeight / 2;
-                this.ctx.beginPath(); this.ctx.moveTo(startX, startY); this.ctx.lineTo(startX + beamDisplayLength, startY); this.ctx.strokeStyle = '#9CA3AF'; this.ctx.lineWidth = 3; this.ctx.setLineDash([5, 5]); this.ctx.stroke(); this.ctx.setLineDash([]);
-                if (I === 0 || E === 0) return; const EI = E * I; const maxDeflection = (P > 0 && a > 0) ? (P * a**2 * (3*L - a)) / (6 * EI) : 0; const deflectionScale = (maxDeflection > 0) ? (canvasHeight / 3) / maxDeflection : 0;
-                this.ctx.beginPath(); this.ctx.moveTo(startX, startY); const gradient = this.ctx.createLinearGradient(startX, startY, startX + beamDisplayLength, startY); gradient.addColorStop(0, '#4f46e5'); gradient.addColorStop(1, '#a855f7'); this.ctx.strokeStyle = gradient; this.ctx.lineWidth = 6; this.ctx.lineCap = 'round';
-                for (let x = 0; x <= L; x++) { let deflection = 0; if (x <= a) { deflection = (P * x**2 * (3*a - x)) / (6 * EI); } else { deflection = (P * a**2 * (3*x - a)) / (6 * EI); } const x_canvas = startX + (x / L) * beamDisplayLength, y_canvas = startY + deflection * deflectionScale; this.ctx.lineTo(x_canvas, y_canvas); } this.ctx.stroke();
-                if (P > 0) {
-                    const load_x_canvas = startX + (a / L) * beamDisplayLength; let load_y_deflected = startY; if (EI > 0) { const load_pos_deflection = (P * a**2 * (3*a - a)) / (6*EI); load_y_deflected = startY + load_pos_deflection * deflectionScale; }
-                    this.ctx.strokeStyle = '#EF4444'; this.ctx.fillStyle = '#EF4444'; this.ctx.lineWidth = 2.5; this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected - 30); this.ctx.lineTo(load_x_canvas, load_y_deflected); this.ctx.stroke(); this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected); this.ctx.lineTo(load_x_canvas - 6, load_y_deflected - 12); this.ctx.lineTo(load_x_canvas + 6, load_y_deflected - 12); this.ctx.closePath(); this.ctx.fill();
+            // Attach navigation to the window object to be accessible from inline HTML onclick attributes
+            window.showSimulator = showSimulator;
+            window.showHub = showHub;
+
+            // --- Global Resize Handler ---
+            window.addEventListener('resize', () => {
+                if (activeSim) {
+                    activeSim.redraw();
                 }
-            },
-            redraw() { const { width, height } = this.canvas.parentElement.getBoundingClientRect(); this.canvas.width = width; this.canvas.height = height; this.drawBeam(); },
-            updateUI() { const I = this.calculateInertia(); const { L, E, P, a } = this.state; const EI = E * I; let maxDeflection = 0; if (EI > 0) { maxDeflection = (P * a**2 * (3*L - a)) / (6 * EI); } this.inertiaResultText.innerHTML = `${I.toLocaleString(undefined, {maximumFractionDigits: 2})} <span class="text-base font-normal">mm⁴</span>`; this.maxDeflectionText.innerHTML = `${maxDeflection.toFixed(4)} <span class="text-base font-normal">mm</span>`; },
-            handleSectionChange() { const type = this.crossSectionSelect.value; this.circleInputs.classList.toggle('active', type === 'circle'); this.rectangleInputs.classList.toggle('active', type === 'rectangle'); this.triangleInputs.classList.toggle('active', type === 'triangle'); }
-        };
+            });
 
-        // --- Simply Supported Simulator Logic ---
-        const simplySupportedSim = {
-            isInitialized: false,
-            init() { 
-                this.isInitialized = true;
-                this.setup(); 
-                this.solveButton.click(); 
-            },
-            setup() {
-                this.canvas = document.getElementById('ss-beamCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.solveButton = document.getElementById('ss-solveButton');
-                this.beamLengthInput = document.getElementById('ss-beamLength');
-                this.youngsModulusInput = document.getElementById('ss-youngsModulus');
-                this.pointLoadInput = document.getElementById('ss-pointLoad');
-                this.loadPositionInput = document.getElementById('ss-loadPosition');
-                this.crossSectionSelect = document.getElementById('ss-crossSection');
-                this.circleInputs = document.getElementById('ss-circleInputs');
-                this.rectangleInputs = document.getElementById('ss-rectangleInputs');
-                this.triangleInputs = document.getElementById('ss-triangleInputs');
-                this.triangleError = document.getElementById('ss-triangleError');
-                this.inertiaResultText = document.getElementById('ss-inertiaResult');
-                this.maxDeflectionText = document.getElementById('ss-maxDeflection');
-                this.state = { L: 1000, E: 200000, P: 500, a: 500 };
+            // --- Cantilever Simulator Logic ---
+            const cantileverSim = {
+                isInitialized: false,
+                init() {
+                    this.isInitialized = true;
+                    this.setup(); 
+                    this.solveButton.click(); 
+                },
+                setup() {
+                    this.canvas = document.getElementById('c-beamCanvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.solveButton = document.getElementById('c-solveButton');
+                    this.beamLengthInput = document.getElementById('c-beamLength');
+                    this.youngsModulusInput = document.getElementById('c-youngsModulus');
+                    this.pointLoadInput = document.getElementById('c-pointLoad');
+                    this.loadPositionInput = document.getElementById('c-loadPosition');
+                    this.crossSectionSelect = document.getElementById('c-crossSection');
+                    this.circleInputs = document.getElementById('c-circleInputs');
+                    this.rectangleInputs = document.getElementById('c-rectangleInputs');
+                    this.triangleInputs = document.getElementById('c-triangleInputs');
+                    this.triangleError = document.getElementById('c-triangleError');
+                    this.inertiaResultText = document.getElementById('c-inertiaResult');
+                    this.maxDeflectionText = document.getElementById('c-maxDeflection');
+                    this.loadDeflectionText = document.getElementById('c-loadDeflection');
+                    this.state = { L: 1000, E: 200000, P: 500, a: 1000 };
+                    
+                    this.solveButton.addEventListener('click', () => {
+                        this.state.L = parseFloat(this.beamLengthInput.value) || 0;
+                        this.state.E = parseFloat(this.youngsModulusInput.value) || 0;
+                        this.state.P = parseFloat(this.pointLoadInput.value) || 0;
+                        this.state.a = Math.min(parseFloat(this.loadPositionInput.value) || 0, this.state.L);
+                        this.loadPositionInput.value = this.state.a; 
+                        this.updateUI();
+                        this.redraw();
+                    });
+                    this.crossSectionSelect.addEventListener('change', this.handleSectionChange.bind(this));
+                    this.handleSectionChange();
+                },
+                calculateInertia() {
+                    const type = this.crossSectionSelect.value; let I = 0; this.triangleError.classList.add('hidden');
+                    if (type === 'circle') { const r = parseFloat(document.getElementById('c-radius').value) || 0; I = (Math.PI * Math.pow(r, 4)) / 4;
+                    } else if (type === 'rectangle') { const b = parseFloat(document.getElementById('c-rectWidth').value) || 0; const h = parseFloat(document.getElementById('c-rectHeight').value) || 0; I = (b * Math.pow(h, 3)) / 12;
+                    } else if (type === 'triangle') {
+                        const sA = parseFloat(document.getElementById('c-sideA').value) || 0, sB = parseFloat(document.getElementById('c-sideB').value) || 0, sC = parseFloat(document.getElementById('c-sideC').value) || 0;
+                        if (sA > 0 && sB > 0 && sC > 0 && sA + sB > sC && sA + sC > sB && sB + sC > sA) { const s = (sA + sB + sC) / 2, area = Math.sqrt(s * (s - sA) * (s - sB) * (s - sC)), height = (2 * area) / sA; I = (sA * Math.pow(height, 3)) / 36;
+                        } else { this.triangleError.classList.remove('hidden'); I = 0; }
+                    } return I;
+                },
+                drawBeam() {
+                    const { L, E, P, a } = this.state; const I = this.calculateInertia(); const { width: canvasWidth, height: canvasHeight } = this.canvas; const padding = Math.min(50, canvasWidth / 12); this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                    const fixedSupportWidth = 10, fixedSupportHeight = canvasHeight * 0.7; this.ctx.fillStyle = '#4B5563'; this.ctx.fillRect(padding - fixedSupportWidth, (canvasHeight / 2) - (fixedSupportHeight / 2), fixedSupportWidth, fixedSupportHeight);
+                    const beamDisplayLength = canvasWidth - 2 * padding, startX = padding, startY = canvasHeight / 2;
+                    this.ctx.beginPath(); this.ctx.moveTo(startX, startY); this.ctx.lineTo(startX + beamDisplayLength, startY); this.ctx.strokeStyle = '#9CA3AF'; this.ctx.lineWidth = 3; this.ctx.setLineDash([5, 5]); this.ctx.stroke(); this.ctx.setLineDash([]);
+                    if (I === 0 || E === 0) return; const EI = E * I; const maxDeflection = (P > 0 && a > 0) ? (P * a**2 * (3*L - a)) / (6 * EI) : 0; const deflectionScale = (maxDeflection > 0) ? (canvasHeight / 3) / maxDeflection : 0;
+                    this.ctx.beginPath(); this.ctx.moveTo(startX, startY); const gradient = this.ctx.createLinearGradient(startX, startY, startX + beamDisplayLength, startY); gradient.addColorStop(0, '#4f46e5'); gradient.addColorStop(1, '#a855f7'); this.ctx.strokeStyle = gradient; this.ctx.lineWidth = 6; this.ctx.lineCap = 'round';
+                    for (let x = 0; x <= L; x++) { let deflection = 0; if (x <= a) { deflection = (P * x**2 * (3*a - x)) / (6 * EI); } else { deflection = (P * a**2 * (3*x - a)) / (6 * EI); } const x_canvas = startX + (x / L) * beamDisplayLength, y_canvas = startY + deflection * deflectionScale; this.ctx.lineTo(x_canvas, y_canvas); } this.ctx.stroke();
+                    if (P > 0) {
+                        const load_x_canvas = startX + (a / L) * beamDisplayLength; let load_y_deflected = startY; if (EI > 0) { const load_pos_deflection = (P * a**3) / (3*EI); load_y_deflected = startY + load_pos_deflection * deflectionScale; }
+                        this.ctx.strokeStyle = '#EF4444'; this.ctx.fillStyle = '#EF4444'; this.ctx.lineWidth = 2.5; this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected - 30); this.ctx.lineTo(load_x_canvas, load_y_deflected); this.ctx.stroke(); this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected); this.ctx.lineTo(load_x_canvas - 6, load_y_deflected - 12); this.ctx.lineTo(load_x_canvas + 6, load_y_deflected - 12); this.ctx.closePath(); this.ctx.fill();
+                    }
+                },
+                redraw() {
+                    setTimeout(() => {
+                        const { width, height } = this.canvas.parentElement.getBoundingClientRect();
+                        if (width === 0 && height === 0) return;
+                        this.canvas.width = width;
+                        this.canvas.height = height;
+                        this.drawBeam();
+                    }, 0);
+                },
+                updateUI() { 
+                    const I = this.calculateInertia(); const { L, E, P, a } = this.state; const EI = E * I; let maxDeflection = 0; let loadDeflection = 0;
+                    if (EI > 0) { 
+                        maxDeflection = (P * a**2 * (3*L - a)) / (6 * EI); 
+                        loadDeflection = (P * a**3) / (3*EI);
+                    } 
+                    this.inertiaResultText.innerHTML = `${I.toLocaleString(undefined, {maximumFractionDigits: 2})} <span class="text-base font-normal">mm⁴</span>`; 
+                    this.maxDeflectionText.innerHTML = `${maxDeflection.toFixed(4)} <span class="text-base font-normal">mm</span>`; 
+                    this.loadDeflectionText.innerHTML = `${loadDeflection.toFixed(4)} <span class="text-base font-normal">mm</span>`;
+                },
+                handleSectionChange() { const type = this.crossSectionSelect.value; this.circleInputs.classList.toggle('active', type === 'circle'); this.rectangleInputs.classList.toggle('active', type === 'rectangle'); this.triangleInputs.classList.toggle('active', type === 'triangle'); }
+            };
 
-                this.solveButton.addEventListener('click', () => {
-                    this.state.L = parseFloat(this.beamLengthInput.value) || 0;
-                    this.state.E = parseFloat(this.youngsModulusInput.value) || 0;
-                    this.state.P = parseFloat(this.pointLoadInput.value) || 0;
-                    this.state.a = Math.min(parseFloat(this.loadPositionInput.value) || 0, this.state.L);
-                    this.loadPositionInput.value = this.state.a;
-                    this.updateUI();
-                    this.redraw();
-                });
-                this.crossSectionSelect.addEventListener('change', this.handleSectionChange.bind(this));
-                window.addEventListener('resize', this.redraw.bind(this));
-                this.handleSectionChange();
-            },
-            calculateInertia() {
-                const type = this.crossSectionSelect.value; let I = 0; this.triangleError.classList.add('hidden');
-                if (type === 'circle') { const r = parseFloat(document.getElementById('ss-radius').value) || 0; I = (Math.PI * Math.pow(r, 4)) / 4;
-                } else if (type === 'rectangle') { const b = parseFloat(document.getElementById('ss-rectWidth').value) || 0; const h = parseFloat(document.getElementById('ss-rectHeight').value) || 0; I = (b * Math.pow(h, 3)) / 12;
-                } else if (type === 'triangle') {
-                    const sA = parseFloat(document.getElementById('ss-sideA').value) || 0, sB = parseFloat(document.getElementById('ss-sideB').value) || 0, sC = parseFloat(document.getElementById('ss-sideC').value) || 0;
-                    if (sA > 0 && sB > 0 && sC > 0 && sA + sB > sC && sA + sC > sB && sB + sC > sA) { const s = (sA + sB + sC) / 2, area = Math.sqrt(s * (s - sA) * (s - sB) * (s - sC)), height = (2 * area) / sA; I = (sA * Math.pow(height, 3)) / 36;
-                    } else { this.triangleError.classList.remove('hidden'); I = 0; }
-                } return I;
-            },
-            drawBeam() {
-                const { L, E, P, a } = this.state; const I = this.calculateInertia(); const { width: canvasWidth, height: canvasHeight } = this.canvas; const padding = Math.min(60, canvasWidth / 10); this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-                const beamDisplayLength = canvasWidth - 2 * padding, startX = padding, startY = canvasHeight / 2;
-                this.ctx.fillStyle = '#4B5563'; this.ctx.beginPath(); this.ctx.moveTo(startX, startY); this.ctx.lineTo(startX - 10, startY + 15); this.ctx.lineTo(startX + 10, startY + 15); this.ctx.closePath(); this.ctx.fill();
-                this.ctx.beginPath(); this.ctx.arc(startX + beamDisplayLength, startY + 10, 10, 0, 2 * Math.PI); this.ctx.fill(); this.ctx.beginPath(); this.ctx.moveTo(startX + beamDisplayLength - 15, startY + 20); this.ctx.lineTo(startX + beamDisplayLength + 15, startY + 20); this.ctx.strokeStyle = '#4B5563'; this.ctx.lineWidth = 2; this.ctx.stroke();
-                this.ctx.beginPath(); this.ctx.moveTo(startX, startY); this.ctx.lineTo(startX + beamDisplayLength, startY); this.ctx.strokeStyle = '#9CA3AF'; this.ctx.lineWidth = 3; this.ctx.setLineDash([5, 5]); this.ctx.stroke(); this.ctx.setLineDash([]);
-                if (I === 0 || E === 0 || L === 0) return; const EI = E * I; const b = L - a;
-                let maxDeflection = 0;
-                if (P > 0 && a > 0 && a < L) { if (a >= L / 2) { const x_max = Math.sqrt((L*L - b*b) / 3); maxDeflection = (P * b * x_max) / (6 * L * EI) * (L*L - b*b - x_max*x_max); } else { const x_max = L - Math.sqrt((L*L - a*a) / 3); maxDeflection = (P*a*(L-x_max))/(6*L*EI)*(L*L - a*a - (L-x_max)*(L-x_max)); }
-                } else if (P > 0 && a === L / 2){ maxDeflection = (P * L**3) / (48 * EI); } maxDeflection = Math.abs(maxDeflection);
-                const deflectionScale = (maxDeflection > 0) ? (canvasHeight / 3) / maxDeflection : 0;
-                this.ctx.beginPath(); this.ctx.moveTo(startX, startY); const gradient = this.ctx.createLinearGradient(startX, startY, startX + beamDisplayLength, startY); gradient.addColorStop(0, '#4f46e5'); gradient.addColorStop(1, '#a855f7'); this.ctx.strokeStyle = gradient; this.ctx.lineWidth = 6; this.ctx.lineCap = 'round';
-                for (let x = 0; x <= L; x++) { let deflection = 0; if (x <= a) { deflection = (P * b * x) / (6 * L * EI) * (L*L - b*b - x*x); } else { deflection = (P * a * (L - x)) / (6 * L * EI) * (2*L*x - x*x - a*a); } const x_canvas = startX + (x / L) * beamDisplayLength; const y_canvas = startY + deflection * deflectionScale; this.ctx.lineTo(x_canvas, y_canvas); } this.ctx.stroke();
-                if (P > 0) {
-                    const load_x_canvas = startX + (a / L) * beamDisplayLength; let load_y_deflected = startY; if (EI > 0) { let deflection_at_a = (P * b * a) / (6 * L * EI) * (L*L - b*b - a*a); load_y_deflected = startY + deflection_at_a * deflectionScale; }
-                    this.ctx.strokeStyle = '#EF4444'; this.ctx.fillStyle = '#EF4444'; this.ctx.lineWidth = 2.5; this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected - 30); this.ctx.lineTo(load_x_canvas, load_y_deflected); this.ctx.stroke(); this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected); this.ctx.lineTo(load_x_canvas - 6, load_y_deflected - 12); this.ctx.lineTo(load_x_canvas + 6, load_y_deflected - 12); this.ctx.closePath(); this.ctx.fill();
-                }
-            },
-            redraw() { const { width, height } = this.canvas.parentElement.getBoundingClientRect(); this.canvas.width = width; this.canvas.height = height; this.drawBeam(); },
-            updateUI() {
-                const I = this.calculateInertia(); const { L, E, P, a } = this.state; const EI = E * I; const b = L - a; let maxDeflection = 0;
-                if (EI > 0 && P > 0 && a > 0 && a < L) { if (a >= L / 2) { const x_max = Math.sqrt((L*L - b*b) / 3); maxDeflection = (P * b * x_max) / (6 * L * EI) * (L*L - b*b - x_max*x_max); } else { const x_max = L - Math.sqrt((L*L - a*a) / 3); maxDeflection = (P*a*(L-x_max))/(6*L*EI)*(L*L - a*a - (L-x_max)*(L-x_max)); } } else if (EI > 0 && P > 0 && a === L/2){ maxDeflection = (P * L**3) / (48 * EI); }
-                this.inertiaResultText.innerHTML = `${I.toLocaleString(undefined, {maximumFractionDigits: 2})} <span class="text-base font-normal">mm⁴</span>`; this.maxDeflectionText.innerHTML = `${Math.abs(maxDeflection).toFixed(4)} <span class="text-base font-normal">mm</span>`;
-            },
-            handleSectionChange() { const type = this.crossSectionSelect.value; this.circleInputs.classList.toggle('active', type === 'circle'); this.rectangleInputs.classList.toggle('active', type === 'rectangle'); this.triangleInputs.classList.toggle('active', type === 'triangle'); }
-        };
+            // --- Simply Supported Simulator Logic ---
+            const simplySupportedSim = {
+                isInitialized: false,
+                init() { 
+                    this.isInitialized = true;
+                    this.setup(); 
+                    this.solveButton.click(); 
+                },
+                setup() {
+                    this.canvas = document.getElementById('ss-beamCanvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.solveButton = document.getElementById('ss-solveButton');
+                    this.beamLengthInput = document.getElementById('ss-beamLength');
+                    this.youngsModulusInput = document.getElementById('ss-youngsModulus');
+                    this.pointLoadInput = document.getElementById('ss-pointLoad');
+                    this.loadPositionInput = document.getElementById('ss-loadPosition');
+                    this.crossSectionSelect = document.getElementById('ss-crossSection');
+                    this.circleInputs = document.getElementById('ss-circleInputs');
+                    this.rectangleInputs = document.getElementById('ss-rectangleInputs');
+                    this.triangleInputs = document.getElementById('ss-triangleInputs');
+                    this.triangleError = document.getElementById('ss-triangleError');
+                    this.inertiaResultText = document.getElementById('ss-inertiaResult');
+                    this.maxDeflectionText = document.getElementById('ss-maxDeflection');
+                    this.loadDeflectionText = document.getElementById('ss-loadDeflection');
+                    this.state = { L: 1000, E: 200000, P: 500, a: 500 };
+
+                    this.solveButton.addEventListener('click', () => {
+                        this.state.L = parseFloat(this.beamLengthInput.value) || 0;
+                        this.state.E = parseFloat(this.youngsModulusInput.value) || 0;
+                        this.state.P = parseFloat(this.pointLoadInput.value) || 0;
+                        this.state.a = Math.min(parseFloat(this.loadPositionInput.value) || 0, this.state.L);
+                        this.loadPositionInput.value = this.state.a;
+                        this.updateUI();
+                        this.redraw();
+                    });
+                    this.crossSectionSelect.addEventListener('change', this.handleSectionChange.bind(this));
+                    this.handleSectionChange();
+                },
+                calculateInertia() {
+                    const type = this.crossSectionSelect.value; let I = 0; this.triangleError.classList.add('hidden');
+                    if (type === 'circle') { const r = parseFloat(document.getElementById('ss-radius').value) || 0; I = (Math.PI * Math.pow(r, 4)) / 4;
+                    } else if (type === 'rectangle') { const b = parseFloat(document.getElementById('ss-rectWidth').value) || 0; const h = parseFloat(document.getElementById('ss-rectHeight').value) || 0; I = (b * Math.pow(h, 3)) / 12;
+                    } else if (type === 'triangle') {
+                        const sA = parseFloat(document.getElementById('ss-sideA').value) || 0, sB = parseFloat(document.getElementById('ss-sideB').value) || 0, sC = parseFloat(document.getElementById('ss-sideC').value) || 0;
+                        if (sA > 0 && sB > 0 && sC > 0 && sA + sB > sC && sA + sC > sB && sB + sC > sA) { const s = (sA + sB + sC) / 2, area = Math.sqrt(s * (s - sA) * (s - sB) * (s - sC)), height = (2 * area) / sA; I = (sA * Math.pow(height, 3)) / 36;
+                        } else { this.triangleError.classList.remove('hidden'); I = 0; }
+                    } return I;
+                },
+                drawBeam() {
+                    const { L, E, P, a } = this.state; const I = this.calculateInertia(); const { width: canvasWidth, height: canvasHeight } = this.canvas; const padding = Math.min(60, canvasWidth / 10); this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                    const beamDisplayLength = canvasWidth - 2 * padding, startX = padding, startY = canvasHeight / 2;
+                    this.ctx.fillStyle = '#4B5563'; this.ctx.beginPath(); this.ctx.moveTo(startX, startY); this.ctx.lineTo(startX - 10, startY + 15); this.ctx.lineTo(startX + 10, startY + 15); this.ctx.closePath(); this.ctx.fill();
+                    this.ctx.beginPath(); this.ctx.arc(startX + beamDisplayLength, startY + 10, 10, 0, 2 * Math.PI); this.ctx.fill(); this.ctx.beginPath(); this.ctx.moveTo(startX + beamDisplayLength - 15, startY + 20); this.ctx.lineTo(startX + beamDisplayLength + 15, startY + 20); this.ctx.strokeStyle = '#4B5563'; this.ctx.lineWidth = 2; this.ctx.stroke();
+                    this.ctx.beginPath(); this.ctx.moveTo(startX, startY); this.ctx.lineTo(startX + beamDisplayLength, startY); this.ctx.strokeStyle = '#9CA3AF'; this.ctx.lineWidth = 3; this.ctx.setLineDash([5, 5]); this.ctx.stroke(); this.ctx.setLineDash([]);
+                    if (I === 0 || E === 0 || L === 0) return; const EI = E * I; const b = L - a;
+                    let maxDeflection = 0;
+                    if (P > 0 && a > 0 && a < L) { if (a >= L / 2) { const x_max = Math.sqrt((L*L - b*b) / 3); maxDeflection = (P * b * x_max) / (6 * L * EI) * (L*L - b*b - x_max*x_max); } else { const x_max = L - Math.sqrt((L*L - a*a) / 3); maxDeflection = (P*a*(L-x_max))/(6*L*EI)*(L*L - a*a - (L-x_max)*(L-x_max)); }
+                    } else if (P > 0 && a === L / 2){ maxDeflection = (P * L**3) / (48 * EI); } maxDeflection = Math.abs(maxDeflection);
+                    const deflectionScale = (maxDeflection > 0) ? (canvasHeight / 3) / maxDeflection : 0;
+                    this.ctx.beginPath(); this.ctx.moveTo(startX, startY); const gradient = this.ctx.createLinearGradient(startX, startY, startX + beamDisplayLength, startY); gradient.addColorStop(0, '#4f46e5'); gradient.addColorStop(1, '#a855f7'); this.ctx.strokeStyle = gradient; this.ctx.lineWidth = 6; this.ctx.lineCap = 'round';
+                    for (let x = 0; x <= L; x++) { let deflection = 0; if (x <= a) { deflection = (P * b * x) / (6 * L * EI) * (L*L - b*b - x*x); } else { deflection = (P * a * (L - x)) / (6 * L * EI) * (2*L*x - x*x - a*a); } const x_canvas = startX + (x / L) * beamDisplayLength; const y_canvas = startY + deflection * deflectionScale; this.ctx.lineTo(x_canvas, y_canvas); } this.ctx.stroke();
+                    if (P > 0) {
+                        const load_x_canvas = startX + (a / L) * beamDisplayLength; let load_y_deflected = startY; if (EI > 0) { let deflection_at_a = (P * (a**2) * (b**2)) / (3 * L * EI); load_y_deflected = startY + deflection_at_a * deflectionScale; }
+                        this.ctx.strokeStyle = '#EF4444'; this.ctx.fillStyle = '#EF4444'; this.ctx.lineWidth = 2.5; this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected - 30); this.ctx.lineTo(load_x_canvas, load_y_deflected); this.ctx.stroke(); this.ctx.beginPath(); this.ctx.moveTo(load_x_canvas, load_y_deflected); this.ctx.lineTo(load_x_canvas - 6, load_y_deflected - 12); this.ctx.lineTo(load_x_canvas + 6, load_y_deflected - 12); this.ctx.closePath(); this.ctx.fill();
+                    }
+                },
+                redraw() {
+                    setTimeout(() => {
+                        const { width, height } = this.canvas.parentElement.getBoundingClientRect();
+                        if (width === 0 && height === 0) return;
+                        this.canvas.width = width;
+                        this.canvas.height = height;
+                        this.drawBeam();
+                    }, 0);
+                },
+                updateUI() {
+                    const I = this.calculateInertia(); const { L, E, P, a } = this.state; const EI = E * I; const b = L - a; let maxDeflection = 0; let loadDeflection = 0;
+                    if (EI > 0 && P > 0 && a > 0 && L > a) { 
+                        if (a >= L / 2) { 
+                            const x_max = Math.sqrt((L*L - b*b) / 3); 
+                            maxDeflection = (P * b * x_max) / (6 * L * EI) * (L*L - b*b - x_max*x_max); 
+                        } else { 
+                            const x_max = L - Math.sqrt((L*L - a*a) / 3); 
+                            maxDeflection = (P*a*(L-x_max))/(6*L*EI)*(L*L - a*a - (L-x_max)*(L-x_max)); 
+                        } 
+                        loadDeflection = (P * (a**2) * (b**2)) / (3 * L * EI);
+                    } else if (EI > 0 && P > 0 && a === L/2){ 
+                        maxDeflection = (P * L**3) / (48 * EI);
+                        loadDeflection = maxDeflection;
+                    }
+                    this.inertiaResultText.innerHTML = `${I.toLocaleString(undefined, {maximumFractionDigits: 2})} <span class="text-base font-normal">mm⁴</span>`; 
+                    this.maxDeflectionText.innerHTML = `${Math.abs(maxDeflection).toFixed(4)} <span class="text-base font-normal">mm</span>`;
+                    this.loadDeflectionText.innerHTML = `${Math.abs(loadDeflection).toFixed(4)} <span class="text-base font-normal">mm</span>`;
+                },
+                handleSectionChange() { const type = this.crossSectionSelect.value; this.circleInputs.classList.toggle('active', type === 'circle'); this.rectangleInputs.classList.toggle('active', type === 'rectangle'); this.triangleInputs.classList.toggle('active', type === 'triangle'); }
+            };
+
+        });
     </script>
 
 </body>
